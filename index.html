@@ -1,5 +1,4 @@
-import os
-html_content = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -403,7 +402,9 @@ html_content = """<!DOCTYPE html>
 
             // Chọn ngẫu nhiên 1 số từ các bảng cửu chương đã chọn
             let n1 = allowedTables[Math.floor(Math.random() * allowedTables.length)]; 
-            let n2 = Math.floor(Math.random() * 10) + 1;
+            
+            // Sinh ngẫu nhiên số thứ 2 từ 2 đến 10 (loại bỏ phép nhân với 1)
+            let n2 = Math.floor(Math.random() * 9) + 2;
 
             resultsDiv.innerHTML = `
                 <div class="math-item flashcard">
@@ -429,7 +430,3 @@ html_content = """<!DOCTYPE html>
 
 </body>
 </html>
-"""
-os.makedirs('/mnt/data/', exist_ok=True)
-with open('/mnt/data/toan_tieu_hoc_v2.html', 'w', encoding='utf-8') as f:
-    f.write(html_content)
