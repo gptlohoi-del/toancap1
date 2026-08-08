@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -243,14 +242,31 @@
         <div id="tables-div" class="full-width" style="display: none;">
             <label>Chọn bảng cửu chương muốn luyện:</label>
             <div class="checkbox-group">
-                <label><input type="checkbox" value="2" checked> Bảng 2</label>
-                <label><input type="checkbox" value="3" checked> Bảng 3</label>
-                <label><input type="checkbox" value="4" checked> Bảng 4</label>
-                <label><input type="checkbox" value="5" checked> Bảng 5</label>
-                <label><input type="checkbox" value="6" checked> Bảng 6</label>
-                <label><input type="checkbox" value="7" checked> Bảng 7</label>
-                <label><input type="checkbox" value="8" checked> Bảng 8</label>
-                <label><input type="checkbox" value="9" checked> Bảng 9</label>
+                <label><input type="checkbox" name="table_cb" value="2" checked> Bảng 2</label>
+                <label><input type="checkbox" name="table_cb" value="3" checked> Bảng 3</label>
+                <label><input type="checkbox" name="table_cb" value="4" checked> Bảng 4</label>
+                <label><input type="checkbox" name="table_cb" value="5" checked> Bảng 5</label>
+                <label><input type="checkbox" name="table_cb" value="6" checked> Bảng 6</label>
+                <label><input type="checkbox" name="table_cb" value="7" checked> Bảng 7</label>
+                <label><input type="checkbox" name="table_cb" value="8" checked> Bảng 8</label>
+                <label><input type="checkbox" name="table_cb" value="9" checked> Bảng 9</label>
+            </div>
+        </div>
+
+        <!-- MỚI: Tùy chọn các số nhân -->
+        <div id="multipliers-div" class="full-width" style="display: none;">
+            <label>Chọn các số nhân (tùy chỉnh):</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="mult_cb" value="1" checked> 1</label>
+                <label><input type="checkbox" name="mult_cb" value="2" checked> 2</label>
+                <label><input type="checkbox" name="mult_cb" value="3" checked> 3</label>
+                <label><input type="checkbox" name="mult_cb" value="4" checked> 4</label>
+                <label><input type="checkbox" name="mult_cb" value="5" checked> 5</label>
+                <label><input type="checkbox" name="mult_cb" value="6" checked> 6</label>
+                <label><input type="checkbox" name="mult_cb" value="7" checked> 7</label>
+                <label><input type="checkbox" name="mult_cb" value="8" checked> 8</label>
+                <label><input type="checkbox" name="mult_cb" value="9" checked> 9</label>
+                <label><input type="checkbox" name="mult_cb" value="10" checked> 10</label>
             </div>
         </div>
 
@@ -265,7 +281,7 @@
         </div>
     </div>
 
-    <button class="btn-random" onclick="generateMath()">TẠO NGẪU NHIÊN</button>
+    <button class="btn-random" onclick="generateMath()">BẮT ĐẦU</button>
 
     <div id="results"></div>
 
@@ -284,17 +300,20 @@
         const digit2Div = document.getElementById('digit2-div');
         const timeDiv = document.getElementById('time-div');
         const tablesDiv = document.getElementById('tables-div');
+        const multipliersDiv = document.getElementById('multipliers-div');
 
         if (op === 'flashcard_multiply') {
             digit1Div.style.display = 'none';
             digit2Div.style.display = 'none';
             timeDiv.style.display = 'block';
             tablesDiv.style.display = 'block';
+            multipliersDiv.style.display = 'block';
         } else {
             digit1Div.style.display = 'block';
             digit2Div.style.display = 'block';
             timeDiv.style.display = 'none';
             tablesDiv.style.display = 'none';
+            multipliersDiv.style.display = 'none';
         }
     }
 
@@ -379,17 +398,46 @@
         }
     }
 
+    // MỚI: Hàm tạo danh sách câu hỏi không trùng lặp và xáo trộn
+    function generateQuestionPool(allowedTables, allowedMultipliers) {
+        let pool = [];
+        // Tạo tất cả các tổ hợp có thể có
+        for (let t of allowedTables) {
+            for (let m of allowedMultipliers) {
+                pool.push({ n1: t, n2: m });
+            }
+        }
+        
+        // Thuật toán Fisher-Yates để xáo trộn mảng (trộn bài)
+        for (let i = pool.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        
+        return pool;
+    }
+
     function startFlashcards(qty, resultsDiv) {
-        // Lấy danh sách các bảng cửu chương được chọn
-        const selectedCheckboxes = document.querySelectorAll('#tables-div input[type="checkbox"]:checked');
-        if (selectedCheckboxes.length === 0) {
+        const tableCheckboxes = document.querySelectorAll('input[name="table_cb"]:checked');
+        const multCheckboxes = document.querySelectorAll('input[name="mult_cb"]:checked');
+        
+        if (tableCheckboxes.length === 0) {
             alert('Vui lòng chọn ít nhất 1 bảng cửu chương!');
             return;
         }
+        if (multCheckboxes.length === 0) {
+            alert('Vui lòng chọn ít nhất 1 số để nhân!');
+            return;
+        }
         
-        const allowedTables = Array.from(selectedCheckboxes).map(cb => parseInt(cb.value));
+        const allowedTables = Array.from(tableCheckboxes).map(cb => parseInt(cb.value));
+        const allowedMultipliers = Array.from(multCheckboxes).map(cb => parseInt(cb.value));
         const timeInMs = parseFloat(document.getElementById('displayTime').value) * 1000;
+        
         let currentQuestion = 0;
+        
+        // Tạo kho câu hỏi ban đầu
+        let questionPool = generateQuestionPool(allowedTables, allowedMultipliers);
 
         function showNextQuestion() {
             if (currentQuestion >= qty) {
@@ -401,15 +449,18 @@
                 return;
             }
 
-            // Chọn ngẫu nhiên 1 số từ các bảng cửu chương đã chọn
-            let n1 = allowedTables[Math.floor(Math.random() * allowedTables.length)]; 
-            
-            // Sinh ngẫu nhiên số thứ 2 từ 2 đến 10 (loại bỏ phép nhân với 1)
-            let n2 = Math.floor(Math.random() * 9) + 2;
+            // Nếu bốc hết kho câu hỏi trước khi đạt số lượng yêu cầu (qty)
+            // thì tự động nạp lại và trộn mới (đảm bảo hết 1 vòng mới lặp lại)
+            if (questionPool.length === 0) {
+                questionPool = generateQuestionPool(allowedTables, allowedMultipliers);
+            }
+
+            // Bốc câu hỏi cuối cùng ra khỏi mảng
+            const q = questionPool.pop();
 
             resultsDiv.innerHTML = `
                 <div class="math-item flashcard">
-                    <div class="question">${n1} × ${n2} = ?</div>
+                    <div class="question">${q.n1} × ${q.n2} = ?</div>
                 </div>`;
             
             currentQuestion++;
